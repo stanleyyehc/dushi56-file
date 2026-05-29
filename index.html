@@ -2,64 +2,116 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公共文件分享站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>文件分享站 · 演示版</title>
     <style>
-        /* 样式与之前类似，略（可复制之前的美化样式） */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 40px 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
         .card {
             background: rgba(255,255,255,0.95);
             border-radius: 24px;
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(2px);
+            transition: transform 0.2s;
         }
-        h1 { font-size: 2rem; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-        h1::before { content: "📁"; }
-        .sub { color: #666; margin-bottom: 24px; border-left: 3px solid #667eea; padding-left: 12px; }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1::before {
+            content: "📁";
+            font-size: 2rem;
+        }
+        .sub {
+            color: #666;
+            margin-bottom: 24px;
+            border-left: 3px solid #667eea;
+            padding-left: 12px;
+        }
         .upload-area {
             border: 2px dashed #ccc;
             border-radius: 20px;
             padding: 40px 20px;
             text-align: center;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
             background: #faf9ff;
         }
-        .upload-area:hover, .upload-area.drag-over { border-color: #667eea; background: #f0eefc; }
-        .upload-icon { font-size: 48px; margin-bottom: 12px; }
-        .file-input { display: none; }
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: #667eea;
+            background: #f0eefc;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .file-input {
+            display: none;
+        }
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border: none;
+            color: white;
             padding: 12px 28px;
             border-radius: 40px;
             font-size: 1rem;
             cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
             margin-top: 16px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .btn:hover { transform: scale(1.02); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
         .status {
             margin-top: 20px;
             padding: 12px;
             border-radius: 12px;
+            font-size: 0.9rem;
             display: none;
         }
-        .status.success { background: #d1fae5; color: #065f46; display: block; }
-        .status.error { background: #fee2e2; color: #991b1b; display: block; }
-        .status.loading { background: #e0e7ff; color: #3730a3; display: block; }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+        .status.loading {
+            background: #e0e7ff;
+            color: #3730a3;
+            display: block;
+        }
         .file-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -71,11 +123,35 @@
             border-radius: 16px;
             padding: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s;
             border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
         }
-        .file-icon { font-size: 40px; text-align: center; margin-bottom: 12px; }
-        .file-name { font-weight: 600; word-break: break-all; font-size: 0.9rem; margin-bottom: 8px; }
-        .file-meta { font-size: 0.75rem; color: #888; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .file-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+        .file-icon {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .file-name {
+            font-weight: 600;
+            word-break: break-all;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 8px;
+            flex: 1;
+        }
+        .file-meta {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
         .download-btn {
             background: #f3f4f6;
             border: none;
@@ -83,105 +159,85 @@
             border-radius: 40px;
             cursor: pointer;
             font-size: 0.8rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            text-decoration: none;
+            transition: 0.2s;
             color: #4b5563;
+            text-decoration: none;
         }
-        .download-btn:hover { background: #667eea; color: white; }
-        .empty-list { text-align: center; padding: 40px; color: #888; grid-column: 1 / -1; }
-        footer { text-align: center; margin-top: 40px; color: rgba(255,255,255,0.8); font-size: 0.8rem; }
+        .download-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .empty-list {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        .demo-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.8rem;
+        }
+        @media (max-width: 640px) {
+            .card { padding: 20px; }
+            h1 { font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="card">
-        <h1>公共文件分享站</h1>
-        <div class="sub">任何人都可以上传和下载文件（请勿上传违法内容）</div>
-        <div class="upload-area" id="dropZone">
+        <h1>文件分享站 <span class="demo-badge">演示版 · 无实际上传</span></h1>
+        <div class="sub">界面完整展示，所有交互仅为模拟演示</div>
+
+        <!-- 上传区域 -->
+        <div class="upload-area" id="demoUploadArea">
             <div class="upload-icon">📤</div>
-            <p>点击或拖拽文件到此区域上传</p>
-            <input type="file" id="fileInput" class="file-input">
-            <button class="btn" id="uploadBtn">📎 选择文件上传</button>
+            <p>点击或拖拽文件到此区域（演示效果）</p>
+            <input type="file" id="demoFileInput" class="file-input">
+            <button class="btn" id="demoUploadBtn">📎 模拟上传</button>
         </div>
-        <div id="status" class="status"></div>
+        <div id="demoStatus" class="status"></div>
     </div>
 
     <div class="card">
-        <h2 style="font-size: 1.4rem; margin-bottom: 16px;">📋 所有文件（实时更新）</h2>
-        <div id="fileGrid" class="file-grid">
-            <div class="empty-list">加载中...</div>
+        <h2 style="font-size: 1.4rem; margin-bottom: 16px;">📋 示例文件列表（模拟数据）</h2>
+        <div id="demoFileGrid" class="file-grid">
+            <!-- 动态填充模拟数据 -->
         </div>
     </div>
-    <footer>文件存储于七牛云，任何人都能上传和下载</footer>
+    <footer>
+        纯演示界面 | 无真实上传/下载功能 | 仅供展示布局和交互效果
+    </footer>
 </div>
 
 <script>
-    // ================= 配置 =================
-    const WORKER_URL = 'https://qiniu-token-provider.stanleyyehc.workers.dev';   // 你的 Worker 地址
-    const QINIU_DOMAIN = 'tfsdmysb8.hb-bkt.clouddn.com';   // 你的七牛云测试域名（不要带 http://）
-    // ========================================
+    // 模拟文件列表数据（静态示例）
+    const mockFiles = [
+        { key: "项目计划书.pdf", size: 245760, putTime: Date.now() - 86400000, icon: "📄" },
+        { key: "年度总结报告.docx", size: 102400, putTime: Date.now() - 172800000, icon: "📝" },
+        { key: "产品发布会海报.png", size: 512000, putTime: Date.now() - 259200000, icon: "🖼️" },
+        { key: "宣传视频.mp4", size: 15728640, putTime: Date.now() - 345600000, icon: "🎬" }
+    ];
 
-    // 从七牛云获取文件列表（公开接口，无需 token）
-    async function fetchFileList() {
-        const listUrl = `http://${QINIU_DOMAIN}/?list`;
-        const resp = await fetch(listUrl);
-        if (!resp.ok) {
-            throw new Error(`列表接口返回 ${resp.status}`);
-        }
-        const data = await resp.json();
-        // data.items 是文件数组
-        return (data.items || []).map(item => ({
-            key: item.key,
-            size: item.fsize,
-            putTime: item.putTime,
-            url: `http://${QINIU_DOMAIN}/${encodeURIComponent(item.key)}`
-        }));
-    }
-
-    // 渲染文件列表
-    async function renderFileList() {
-        const grid = document.getElementById('fileGrid');
-        grid.innerHTML = '<div class="empty-list">加载中...</div>';
-        try {
-            const files = await fetchFileList();
-            if (files.length === 0) {
-                grid.innerHTML = '<div class="empty-list">暂无文件，快来上传第一个吧～</div>';
-                return;
-            }
-            // 按上传时间倒序（新的在前）
-            files.sort((a, b) => b.putTime - a.putTime);
-            grid.innerHTML = files.map(file => `
-                <div class="file-card">
-                    <div class="file-icon">${getFileIcon(file.key)}</div>
-                    <div class="file-name" title="${escapeHtml(file.key)}">${escapeHtml(truncate(file.key, 35))}</div>
-                    <div class="file-meta">
-                        <span>${formatSize(file.size)}</span>
-                        <span>${formatDate(file.putTime)}</span>
-                    </div>
-                    <a href="${file.url}" class="download-btn" download target="_blank">
-                        ⬇️ 下载
-                    </a>
-                </div>
-            `).join('');
-        } catch (err) {
-            console.error(err);
-            grid.innerHTML = `<div class="empty-list">加载失败: ${err.message}<br>请检查网络或七牛云域名配置</div>`;
-        }
-    }
-
-    // 辅助函数（与之前相同）
-    function getFileIcon(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
-        if (['mp4','webm','mov'].includes(ext)) return '🎬';
-        if (['mp3','wav','flac'].includes(ext)) return '🎵';
-        if (['pdf'].includes(ext)) return '📄';
-        if (['zip','rar','7z','tar'].includes(ext)) return '🗜️';
-        return '📎';
-    }
+    // 辅助函数：格式化文件大小
     function formatSize(bytes) {
         if (bytes === 0) return '0 B';
         const k = 1024;
@@ -189,11 +245,54 @@
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    function formatDate(putTime) {
-        // putTime 是微秒时间戳（七牛云格式）
-        const date = new Date(putTime / 10000);
+
+    // 辅助函数：格式化日期
+    function formatDate(timestamp) {
+        const date = new Date(timestamp);
         return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
     }
+
+    // 渲染模拟文件列表
+    function renderMockFileList() {
+        const grid = document.getElementById('demoFileGrid');
+        if (!mockFiles.length) {
+            grid.innerHTML = '<div class="empty-list">暂无文件，模拟上传一个吧～</div>';
+            return;
+        }
+        grid.innerHTML = mockFiles.map(file => `
+            <div class="file-card">
+                <div class="file-icon">${file.icon || getFileIcon(file.key)}</div>
+                <div class="file-name" title="${escapeHtml(file.key)}">${escapeHtml(truncate(file.key, 35))}</div>
+                <div class="file-meta">
+                    <span>${formatSize(file.size)}</span>
+                    <span>${formatDate(file.putTime)}</span>
+                </div>
+                <a href="javascript:void(0)" class="download-btn demo-download" data-filename="${escapeHtml(file.key)}">
+                    ⬇️ 模拟下载
+                </a>
+            </div>
+        `).join('');
+
+        // 给所有模拟下载按钮绑定事件（阻止真实跳转）
+        document.querySelectorAll('.demo-download').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showMessage(`🔔 演示模式：未实际下载文件 “${btn.getAttribute('data-filename')}”`, 'success');
+            });
+        });
+    }
+
+    function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
+        if (['mp4','webm','mov'].includes(ext)) return '🎬';
+        if (['mp3','wav','flac'].includes(ext)) return '🎵';
+        if (['pdf'].includes(ext)) return '📄';
+        if (['zip','rar','7z','tar'].includes(ext)) return '🗜️';
+        if (['doc','docx'].includes(ext)) return '📝';
+        return '📎';
+    }
+
     function escapeHtml(str) {
         return str.replace(/[&<>]/g, function(m) {
             if (m === '&') return '&amp;';
@@ -202,94 +301,72 @@
             return m;
         });
     }
+
     function truncate(str, len) {
         return str.length > len ? str.slice(0, len-3) + '...' : str;
     }
 
-    // 显示消息
+    // 显示模拟消息
     function showMessage(msg, type = 'loading') {
-        const statusDiv = document.getElementById('status');
+        const statusDiv = document.getElementById('demoStatus');
         statusDiv.textContent = msg;
         statusDiv.className = `status ${type}`;
         if (type !== 'loading') {
             setTimeout(() => {
-                if (statusDiv.className.includes(type)) statusDiv.style.display = 'none';
-                statusDiv.className = 'status';
-            }, 4000);
+                if (statusDiv.className.includes(type)) {
+                    statusDiv.style.display = 'none';
+                    statusDiv.className = 'status';
+                }
+            }, 3000);
         } else {
             statusDiv.style.display = 'block';
         }
     }
 
-    // 获取上传凭证
-    async function getUploadToken() {
-        const resp = await fetch(`${WORKER_URL}/get-upload-token`);
-        if (!resp.ok) throw new Error(`获取凭证失败 HTTP ${resp.status}`);
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error);
-        return data;
-    }
-
-    // 上传文件
-    async function uploadFile(file) {
+    // 模拟上传动作
+    function simulateUpload(file) {
         if (!file) return;
-        showMessage(`正在准备上传 ${file.name}...`, 'loading');
-        try {
-            const { uploadToken } = await getUploadToken();
-            const formData = new FormData();
-            formData.append('token', uploadToken);
-            formData.append('key', file.name);
-            formData.append('file', file);
-
-            // 华北区域使用 upload-z1.qiniup.com（根据你的空间区域调整）
-            const uploadUrl = 'https://upload-z1.qiniup.com';
-            const resp = await fetch(uploadUrl, {
-                method: 'POST',
-                body: formData
-            });
-            if (!resp.ok) {
-                const errText = await resp.text();
-                throw new Error(`上传失败 ${resp.status}: ${errText}`);
-            }
-            showMessage(`✅ 文件 ${file.name} 上传成功！`, 'success');
-            // 刷新文件列表（让所有人都能看到新文件）
-            await renderFileList();
-            document.getElementById('fileInput').value = '';
-        } catch (err) {
-            console.error(err);
-            showMessage(`❌ 上传失败: ${err.message}`, 'error');
-        }
+        showMessage(`🔍 演示模式：检测到选择文件 “${file.name}”，未实际上传`, 'loading');
+        setTimeout(() => {
+            showMessage(`✅ 演示完成：实际并未上传，仅展示交互效果`, 'success');
+        }, 1500);
     }
 
-    // 绑定事件
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
+    // 绑定UI事件
+    const uploadArea = document.getElementById('demoUploadArea');
+    const fileInput = document.getElementById('demoFileInput');
+    const uploadBtn = document.getElementById('demoUploadBtn');
 
     uploadBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) uploadFile(e.target.files[0]);
+        if (e.target.files.length) {
+            simulateUpload(e.target.files[0]);
+        }
         fileInput.value = '';
     });
-    dropZone.addEventListener('dragover', (e) => {
+
+    // 拖拽模拟
+    uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.add('drag-over');
+        uploadArea.classList.add('drag-over');
     });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-    dropZone.addEventListener('drop', (e) => {
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+    uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('drag-over');
+        uploadArea.classList.remove('drag-over');
         const file = e.dataTransfer.files[0];
-        if (file) uploadFile(file);
+        if (file) simulateUpload(file);
     });
-    dropZone.addEventListener('click', (e) => {
-        if (e.target === dropZone || e.target.classList.contains('upload-icon') || e.target.tagName === 'P') {
+    uploadArea.addEventListener('click', (e) => {
+        if (e.target === uploadArea || e.target.classList.contains('upload-icon') || e.target.tagName === 'P') {
             fileInput.click();
         }
     });
 
-    // 初始加载列表
-    renderFileList();
+    // 初始渲染模拟列表
+    renderMockFileList();
 </script>
 </body>
 </html>
