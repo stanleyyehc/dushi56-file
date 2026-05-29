@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的文件分享站</title>
+    <title>公共文件分享站</title>
     <style>
+        /* 样式与之前类似，略（可复制之前的美化样式） */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 40px 20px;
@@ -97,8 +98,8 @@
 <body>
 <div class="container">
     <div class="card">
-        <h1>文件分享站</h1>
-        <div class="sub">点击或拖拽上传，文件会保存到七牛云（永久有效）</div>
+        <h1>公共文件分享站</h1>
+        <div class="sub">任何人都可以上传和下载文件（请勿上传违法内容）</div>
         <div class="upload-area" id="dropZone">
             <div class="upload-icon">📤</div>
             <p>点击或拖拽文件到此区域上传</p>
@@ -109,77 +110,69 @@
     </div>
 
     <div class="card">
-        <h2 style="font-size: 1.4rem; margin-bottom: 16px;">📋 已上传的文件</h2>
+        <h2 style="font-size: 1.4rem; margin-bottom: 16px;">📋 所有文件（实时更新）</h2>
         <div id="fileGrid" class="file-grid">
             <div class="empty-list">加载中...</div>
         </div>
-        <div style="margin-top: 16px; text-align: right;">
-            <button id="clearHistoryBtn" class="btn" style="background: #ccc; color: #333;">🗑️ 清除历史记录</button>
-        </div>
     </div>
-    <footer>Powered by 七牛云 | 文件列表保存在浏览器本地，清除缓存会丢失记录但文件仍在</footer>
+    <footer>文件存储于七牛云，任何人都能上传和下载</footer>
 </div>
 
 <script>
     // ================= 配置 =================
-    const WORKER_URL = 'https://qiniu-token-provider.stanleyyehc.workers.dev';  // 你的 Worker 地址
-    // =======================================
+    const WORKER_URL = 'https://qiniu-token-provider.stanleyyehc.workers.dev';   // 你的 Worker 地址
+    const QINIU_DOMAIN = 'tfsdmysb8.hb-bkt.clouddn.com';   // 你的七牛云测试域名（不要带 http://）
+    // ========================================
 
-    // 本地存储的 key
-    const STORAGE_KEY = 'uploaded_files_list';
-
-    // 获取本地文件列表
-    function getLocalFileList() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            try {
-                return JSON.parse(stored);
-            } catch(e) { return []; }
+    // 从七牛云获取文件列表（公开接口，无需 token）
+    async function fetchFileList() {
+        const listUrl = `http://${QINIU_DOMAIN}/?list`;
+        const resp = await fetch(listUrl);
+        if (!resp.ok) {
+            throw new Error(`列表接口返回 ${resp.status}`);
         }
-        return [];
-    }
-
-    // 保存文件列表到本地
-    function saveLocalFileList(files) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
-    }
-
-    // 添加新文件到列表
-    function addFileToList(fileInfo) {
-        const files = getLocalFileList();
-        // 避免重复添加（同名文件）
-        const existing = files.find(f => f.key === fileInfo.key);
-        if (!existing) {
-            files.unshift(fileInfo); // 新文件放在最前面
-            saveLocalFileList(files);
-        }
-        renderFileList();
+        const data = await resp.json();
+        // data.items 是文件数组
+        return (data.items || []).map(item => ({
+            key: item.key,
+            size: item.fsize,
+            putTime: item.putTime,
+            url: `http://${QINIU_DOMAIN}/${encodeURIComponent(item.key)}`
+        }));
     }
 
     // 渲染文件列表
-    function renderFileList() {
+    async function renderFileList() {
         const grid = document.getElementById('fileGrid');
-        const files = getLocalFileList();
-        if (files.length === 0) {
-            grid.innerHTML = '<div class="empty-list">暂无文件，上传一个吧～</div>';
-            return;
-        }
-        grid.innerHTML = files.map(file => `
-            <div class="file-card">
-                <div class="file-icon">${getFileIcon(file.key)}</div>
-                <div class="file-name" title="${escapeHtml(file.key)}">${escapeHtml(truncate(file.key, 35))}</div>
-                <div class="file-meta">
-                    <span>${formatSize(file.size)}</span>
-                    <span>${formatDate(file.putTime)}</span>
+        grid.innerHTML = '<div class="empty-list">加载中...</div>';
+        try {
+            const files = await fetchFileList();
+            if (files.length === 0) {
+                grid.innerHTML = '<div class="empty-list">暂无文件，快来上传第一个吧～</div>';
+                return;
+            }
+            // 按上传时间倒序（新的在前）
+            files.sort((a, b) => b.putTime - a.putTime);
+            grid.innerHTML = files.map(file => `
+                <div class="file-card">
+                    <div class="file-icon">${getFileIcon(file.key)}</div>
+                    <div class="file-name" title="${escapeHtml(file.key)}">${escapeHtml(truncate(file.key, 35))}</div>
+                    <div class="file-meta">
+                        <span>${formatSize(file.size)}</span>
+                        <span>${formatDate(file.putTime)}</span>
+                    </div>
+                    <a href="${file.url}" class="download-btn" download target="_blank">
+                        ⬇️ 下载
+                    </a>
                 </div>
-                <a href="${WORKER_URL}/${encodeURIComponent(file.key)}" class="download-btn" download target="_blank">
-                    ⬇️ 下载
-                </a>
-            </div>
-        `).join('');
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            grid.innerHTML = `<div class="empty-list">加载失败: ${err.message}<br>请检查网络或七牛云域名配置</div>`;
+        }
     }
 
-    // 辅助函数
+    // 辅助函数（与之前相同）
     function getFileIcon(filename) {
         const ext = filename.split('.').pop().toLowerCase();
         if (['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼️';
@@ -196,11 +189,9 @@
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    function formatDate(timestamp) {
-        // timestamp 是毫秒或微秒，这里兼容
-        let date;
-        if (timestamp > 1e12) date = new Date(timestamp / 10000);
-        else date = new Date(timestamp);
+    function formatDate(putTime) {
+        // putTime 是微秒时间戳（七牛云格式）
+        const date = new Date(putTime / 10000);
         return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
     }
     function escapeHtml(str) {
@@ -244,7 +235,7 @@
         if (!file) return;
         showMessage(`正在准备上传 ${file.name}...`, 'loading');
         try {
-            const { uploadToken, domain } = await getUploadToken();
+            const { uploadToken } = await getUploadToken();
             const formData = new FormData();
             formData.append('token', uploadToken);
             formData.append('key', file.name);
@@ -260,17 +251,9 @@
                 const errText = await resp.text();
                 throw new Error(`上传失败 ${resp.status}: ${errText}`);
             }
-            const result = await resp.json();
             showMessage(`✅ 文件 ${file.name} 上传成功！`, 'success');
-
-            // 添加到本地列表
-            addFileToList({
-                key: file.name,
-                size: file.size,
-                putTime: Date.now(),  // 毫秒时间戳
-                url: `http://${domain.replace('http://', '')}/${encodeURIComponent(file.name)}`
-            });
-            // 清空文件选择框
+            // 刷新文件列表（让所有人都能看到新文件）
+            await renderFileList();
             document.getElementById('fileInput').value = '';
         } catch (err) {
             console.error(err);
@@ -278,23 +261,10 @@
         }
     }
 
-    // 清除历史记录
-    function clearHistory() {
-        if (confirm('确定要清除所有本地记录吗？注意：这不会删除七牛云上的实际文件，只是清空列表显示。')) {
-            localStorage.removeItem(STORAGE_KEY);
-            renderFileList();
-            showMessage('历史记录已清除', 'success');
-        }
-    }
-
-    // 页面加载时渲染列表
-    renderFileList();
-
     // 绑定事件
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadBtn = document.getElementById('uploadBtn');
-    const clearBtn = document.getElementById('clearHistoryBtn');
 
     uploadBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
@@ -317,7 +287,9 @@
             fileInput.click();
         }
     });
-    clearBtn.addEventListener('click', clearHistory);
+
+    // 初始加载列表
+    renderFileList();
 </script>
 </body>
 </html>
